@@ -1,5 +1,5 @@
-const app = require('../backend/server.js');
+// Import the Express app
+const app = require('../backend/server');
 
-module.exports = (req, res) => {
-    return app(req, res);
-};
+// Export handler for Vercel Serverless
+module.exports = app;

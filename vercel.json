@@ -1,15 +1,5 @@
 {
     "version": 2,
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/api/[...route].js"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ],
     "headers": [
         {
             "source": "/api/(.*)",
