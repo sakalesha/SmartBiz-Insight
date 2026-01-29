@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "vercel-build": "npm run build --workspace=frontend"
+        "vercel-build": "cd frontend && npm run build"
     },
     "workspaces": [
         "frontend",
