@@ -33,6 +33,14 @@
   - **UI**: Built `Login` and `Register` pages with responsive forms.
   - **Routing**: setup `react-router-dom` and created `PrivateRoute` for dashboard protection.
 
+### Phase 4: Deployment Setup
+**Status**: Completed
+- **Configuration**:
+  - **Local**: Vite proxy used for API calls.
+  - **Production**: Vercel `vercel.json` used for monorepo routing.
+  - **Environment**: MongoDB Atlas & Serverless backend.
+- **Documentation**: Created `DEPLOY_INSTRUCTIONS.md`.
+
 ## Next Steps (Phase 3)
 1. **Layout Components**: Create Sidebar, Header, and Main Layout structure.
 2. **Dashboard Routing**: Configure nested routes for dashboard views.
