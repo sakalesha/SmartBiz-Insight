@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
+            console.log('Attempting login to:', `${API_URL}/users/login`);
             const response = await fetch(`${API_URL}/users/login`, {
                 method: 'POST',
                 headers: {
@@ -30,19 +31,26 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (response.ok) {
+                console.log('Login successful:', data);
                 localStorage.setItem('userInfo', JSON.stringify(data));
                 setUser(data);
                 return { success: true };
             } else {
+                console.error('Login failed:', data.message);
                 return { success: false, message: data.message };
             }
         } catch (error) {
+            console.error('Login error:', error);
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                return { success: false, message: 'Unable to connect to server. Check your internet or CORS settings.' };
+            }
             return { success: false, message: error.message };
         }
     };
 
     const register = async (name, email, password) => {
         try {
+            console.log('Attempting register to:', `${API_URL}/users/register`);
             const response = await fetch(`${API_URL}/users/register`, {
                 method: 'POST',
                 headers: {
@@ -54,13 +62,19 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (response.ok) {
+                console.log('Registration successful:', data);
                 localStorage.setItem('userInfo', JSON.stringify(data));
                 setUser(data);
                 return { success: true };
             } else {
+                console.error('Registration failed:', data.message);
                 return { success: false, message: data.message };
             }
         } catch (error) {
+            console.error('Registration error:', error);
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                return { success: false, message: 'Unable to connect to server. Check your internet or CORS settings.' };
+            }
             return { success: false, message: error.message };
         }
     };
