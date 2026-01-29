@@ -36,12 +36,11 @@
 ### Phase 4: Deployment Setup
 **Status**: Completed
 - **Configuration**:
-  - **Local**: Vite proxy used for API calls.
-  - **Production**: Vercel `vercel.json` used for monorepo routing with `rewrites`.
-  - **Build System**: Root `package.json` triggers independent frontend build (`cd frontend && npm run build`).
-  - **Tailwind CSS**: Updated to support v4 via `@tailwindcss/postcss`.
-  - **Environment**: MongoDB Atlas & Serverless backend.
-- **Documentation**: Created `DEPLOY_INSTRUCTIONS.md`.
+  - **Architecture**: Separate Vercel projects for frontend and backend
+  - **Frontend**: Environment variable `VITE_API_URL` for backend connection
+  - **Backend**: Dynamic CORS with `FRONTEND_URL` environment variable
+  - **No Monorepo**: Clean separation, no complex routing needed
+- **Documentation**: Updated `DEPLOY_INSTRUCTIONS.md` for two-project deployment
 
 ## Next Steps (Phase 3)
 1. **Layout Components**: Create Sidebar, Header, and Main Layout structure.
