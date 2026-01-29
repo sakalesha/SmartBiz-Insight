@@ -30,13 +30,32 @@ app.use(cors({
     credentials: true
 }));
 
-// Database Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/smartbiz_db', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+// Cached Database Connection
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedDb) {
+        return cachedDb;
+    }
+
+    try {
+        const db = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/smartbiz_db', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000 // Fail faster if DB is unreachable
+        });
+
+        console.log('MongoDB Connected');
+        cachedDb = db;
+        return db;
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        throw error;
+    }
+}
+
+// Connect immediately but also ensure connection in routes/middleware if needed
+connectToDatabase();
 
 // Routes
 app.get('/', (req, res) => {

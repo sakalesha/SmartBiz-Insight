@@ -20,27 +20,42 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             console.log('Attempting login to:', `${API_URL}/users/login`);
-            const response = await fetch(`${API_URL}/users/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
 
-            const data = await response.json();
+            // Create a timeout promise that rejects after 15 seconds
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-            if (response.ok) {
-                console.log('Login successful:', data);
-                localStorage.setItem('userInfo', JSON.stringify(data));
-                setUser(data);
-                return { success: true };
-            } else {
-                console.error('Login failed:', data.message);
-                return { success: false, message: data.message };
+            try {
+                const response = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Login successful:', data);
+                    localStorage.setItem('userInfo', JSON.stringify(data));
+                    setUser(data);
+                    return { success: true };
+                } else {
+                    console.error('Login failed:', data.message);
+                    return { success: false, message: data.message };
+                }
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                throw fetchError;
             }
         } catch (error) {
             console.error('Login error:', error);
+            if (error.name === 'AbortError') {
+                return { success: false, message: 'Request timed out. Server is taking too long to respond.' };
+            }
             if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
                 return { success: false, message: 'Unable to connect to server. Check your internet or CORS settings.' };
             }
