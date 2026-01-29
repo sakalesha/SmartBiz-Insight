@@ -2,8 +2,8 @@ import { createContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-// Use environment variable for API URL, fallback to /api for local dev
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable for API URL, fallback to production backend
+const API_URL = import.meta.env.VITE_API_URL || 'https://smart-biz-insight.vercel.app/api';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
