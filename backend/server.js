@@ -28,4 +28,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', authRoutes);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
