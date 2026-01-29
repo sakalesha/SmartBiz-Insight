@@ -37,7 +37,9 @@
 **Status**: Completed
 - **Configuration**:
   - **Local**: Vite proxy used for API calls.
-  - **Production**: Vercel `vercel.json` used for monorepo routing.
+  - **Production**: Vercel `vercel.json` used for monorepo routing with `rewrites`.
+  - **Build System**: Root `package.json` triggers independent frontend build (`cd frontend && npm run build`).
+  - **Tailwind CSS**: Updated to support v4 via `@tailwindcss/postcss`.
   - **Environment**: MongoDB Atlas & Serverless backend.
 - **Documentation**: Created `DEPLOY_INSTRUCTIONS.md`.
 
