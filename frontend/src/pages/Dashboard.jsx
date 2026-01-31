@@ -1,15 +1,73 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
+import { RevenueChart, UserGrowthChart } from '../components/DashboardCharts';
 
 const Dashboard = () => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
+    
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        activeCustomers: 0,
+        totalOrders: 0,
+        growth: 0
+    });
+    const [analyticsData, setAnalyticsData] = useState({
+        revenueData: [],
+        userGrowthData: []
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const token = user?.token;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Fetch Stats
+                const statsRes = await fetch(`${import.meta.env.VITE_API_URL}/dashboard/stats`, { headers });
+                const statsData = await statsRes.json();
+
+                // Fetch Analytics
+                const analyticsRes = await fetch(`${import.meta.env.VITE_API_URL}/dashboard/analytics`, { headers });
+                const analyticsJson = await analyticsRes.json();
+
+                if (statsRes.ok && analyticsRes.ok) {
+                    setStats(statsData);
+                    setAnalyticsData(analyticsJson);
+                } else {
+                    setError('Failed to fetch dashboard data');
+                }
+            } catch (err) {
+                console.error('Dashboard fetch error:', err);
+                setError('Failed to load dashboard data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchDashboardData();
+        }
+    }, [user]);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -62,6 +120,12 @@ const Dashboard = () => {
                     </p>
                 </div>
 
+                {error && (
+                    <div className="mb-8 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        {error}
+                    </div>
+                )}
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Stat Card 1 */}
@@ -72,10 +136,10 @@ const Dashboard = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                 </svg>
                             </div>
-                            <span className="text-green-500 text-sm font-medium">+12%</span>
+                            <span className="text-green-500 text-sm font-medium">+{stats.growth}%</span>
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium mb-1">Total Revenue</h3>
-                        <p className="text-2xl font-bold text-gray-900">$45,231</p>
+                        <p className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
                     </div>
 
                     {/* Stat Card 2 */}
@@ -88,8 +152,8 @@ const Dashboard = () => {
                             </div>
                             <span className="text-green-500 text-sm font-medium">+8%</span>
                         </div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">New Customers</h3>
-                        <p className="text-2xl font-bold text-gray-900">1,234</p>
+                        <h3 className="text-gray-500 text-sm font-medium mb-1">Active Customers</h3>
+                        <p className="text-2xl font-bold text-gray-900">{stats.activeCustomers.toLocaleString()}</p>
                     </div>
 
                     {/* Stat Card 3 */}
@@ -103,7 +167,7 @@ const Dashboard = () => {
                             <span className="text-green-500 text-sm font-medium">+23%</span>
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium mb-1">Total Orders</h3>
-                        <p className="text-2xl font-bold text-gray-900">892</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.totalOrders.toLocaleString()}</p>
                     </div>
 
                     {/* Stat Card 4 */}
@@ -117,23 +181,14 @@ const Dashboard = () => {
                             <span className="text-red-500 text-sm font-medium">-4%</span>
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium mb-1">Growth Rate</h3>
-                        <p className="text-2xl font-bold text-gray-900">18.2%</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.growth}%</p>
                     </div>
                 </div>
 
-                {/* Coming Soon Section */}
-                <div className="bg-white rounded-xl shadow-lg shadow-gray-100/50 p-8 border border-gray-100 text-center">
-                    <div className="max-w-md mx-auto">
-                        <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">More Features Coming Soon!</h3>
-                        <p className="text-gray-600">
-                            We're working on adding powerful analytics, reporting tools, and business insights. Stay tuned!
-                        </p>
-                    </div>
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <RevenueChart data={analyticsData.revenueData} />
+                    <UserGrowthChart data={analyticsData.userGrowthData} />
                 </div>
             </main>
         </div>
