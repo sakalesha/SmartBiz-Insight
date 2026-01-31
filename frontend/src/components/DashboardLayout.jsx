@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FiHome, FiUsers, FiShoppingCart, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiUsers, FiShoppingCart, FiLogOut, FiBarChart2 } from 'react-icons/fi';
 import AuthContext from '../context/AuthContext';
 
 const DashboardLayout = () => {
@@ -16,7 +16,8 @@ const DashboardLayout = () => {
     const menuItems = [
         { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
-        { path: '/orders', icon: FiShoppingCart, label: 'Orders' }
+        { path: '/orders', icon: FiShoppingCart, label: 'Orders' },
+        { path: '/analytics', icon: FiBarChart2, label: 'Analytics' }
     ];
 
     return (
@@ -41,8 +42,8 @@ const DashboardLayout = () => {
                                 key={item.path}
                                 to={item.path}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-all duration-200 ${isActive
-                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 <Icon className="w-5 h-5" />
