@@ -8,10 +8,7 @@ dotenv.config();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/smartbiz_db', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/smartbiz_db');
         console.log('MongoDB Connected for seeding...');
     } catch (error) {
         console.error('MongoDB connection error:', error);
@@ -55,6 +52,9 @@ const generateOrders = (customers, count) => {
         { name: 'Ultra Tool', price: 79.99 },
         { name: 'Mega Device', price: 199.99 },
         { name: 'Pro Package', price: 299.99 },
+        { name: 'Basic Kit', price: 49.99 },
+        { name: 'Deluxe Set', price: 179.99 },
+        { name: 'Standard Bundle', price: 129.99 }
     ];
 
     for (let i = 0; i < count; i++) {
@@ -78,14 +78,19 @@ const generateOrders = (customers, count) => {
 
         // Create order with date in last 7 months
         const monthsAgo = Math.floor(Math.random() * 7);
+        const daysAgo = Math.floor(Math.random() * 30);
         const orderDate = new Date();
         orderDate.setMonth(orderDate.getMonth() - monthsAgo);
+        orderDate.setDate(orderDate.getDate() - daysAgo);
+
+        const statuses = ['completed', 'completed', 'completed', 'pending', 'cancelled'];
 
         orders.push({
+            orderNumber: `ORD-${String(i + 1).padStart(6, '0')}`,
             customer: customer._id,
             items: items,
             totalAmount: Math.round(totalAmount * 100) / 100,
-            status: Math.random() > 0.2 ? 'completed' : 'pending',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
             createdAt: orderDate
         });
     }
@@ -123,36 +128,58 @@ const seedDatabase = async () => {
         await Customer.deleteMany({});
         await Order.deleteMany({});
         await Transaction.deleteMany({});
+        console.log('✓ Cleared existing data');
 
         // Generate and insert customers
-        console.log('Generating 50 customers...');
+        console.log('\nGenerating 50 customers...');
         const customersData = generateCustomers(50);
         const customers = await Customer.insertMany(customersData);
         console.log(`✓ Created ${customers.length} customers`);
 
         // Generate and insert orders
-        console.log('Generating 100 orders...');
+        console.log('\nGenerating 100 orders...');
         const ordersData = generateOrders(customers, 100);
         const orders = await Order.insertMany(ordersData);
         console.log(`✓ Created ${orders.length} orders`);
 
         // Generate and insert transactions
-        console.log('Generating transactions...');
+        console.log('\nGenerating transactions...');
         const transactionsData = generateTransactions(orders);
-        const transactions = await Transaction.insertMany(transactionsData);
-        console.log(`✓ Created ${transactions.length} transactions`);
+        if (transactionsData.length > 0) {
+            const transactions = await Transaction.insertMany(transactionsData);
+            console.log(`✓ Created ${transactions.length} transactions`);
+        } else {
+            console.log('⚠ No completed orders, skipping transactions');
+        }
 
         console.log('\n✅ Database seeded successfully!');
         console.log(`
-Summary:
-- Customers: ${customers.length}
-- Orders: ${orders.length}
-- Transactions: ${transactions.length}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 SEED SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 Customers:     ${customers.length}
+📦 Orders:        ${orders.length}
+💰 Transactions:  ${transactionsData.length}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your database is now populated with test data!
+You can now:
+  • View analytics at /analytics
+  • Manage customers at /customers  
+  • Manage orders at /orders
+  • See dashboard stats at /dashboard
         `);
 
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error seeding database:', error);
+        console.error('\n❌ Error seeding database:');
+        console.error(error.message);
+        if (error.errors) {
+            console.error('\nValidation errors:');
+            Object.keys(error.errors).forEach(key => {
+                console.error(`  - ${key}: ${error.errors[key].message}`);
+            });
+        }
         process.exit(1);
     }
 };
