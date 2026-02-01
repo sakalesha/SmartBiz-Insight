@@ -6,12 +6,12 @@ const {
     createOrder,
     updateOrderStatus
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, manager } = require('../middleware/authMiddleware');
 
 // All routes are protected
 router.get('/', protect, getOrders);
 router.get('/:id', protect, getOrderById);
-router.post('/', protect, createOrder);
-router.put('/:id/status', protect, updateOrderStatus);
+router.post('/', protect, manager, createOrder);
+router.put('/:id/status', protect, manager, updateOrderStatus);
 
 module.exports = router;

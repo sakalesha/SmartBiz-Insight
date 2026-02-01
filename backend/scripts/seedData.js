@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
@@ -128,7 +129,18 @@ const seedDatabase = async () => {
         await Customer.deleteMany({});
         await Order.deleteMany({});
         await Transaction.deleteMany({});
+        // Also clear Users to reset roles (CAUTION: Resets all users)
+        await User.deleteMany({});
         console.log('✓ Cleared existing data');
+
+        // Generate Users
+        console.log('\nGenerating Users...');
+        const users = await User.insertMany([
+            { name: 'Admin User', email: 'admin@example.com', password: 'password123', role: 'admin' },
+            { name: 'Manager User', email: 'manager@example.com', password: 'password123', role: 'manager' },
+            { name: 'Regular User', email: 'user@example.com', password: 'password123', role: 'user' }
+        ]);
+        console.log(`✓ Created ${users.length} users (Admin, Manager, User)`);
 
         // Generate and insert customers
         console.log('\nGenerating 50 customers...');

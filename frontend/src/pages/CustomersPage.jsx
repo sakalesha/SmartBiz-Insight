@@ -3,8 +3,11 @@ import { FiPlus, FiEdit, FiTrash2, FiSearch, FiDownload } from 'react-icons/fi';
 import { fetchCustomers, deleteCustomer } from '../utils/api';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import CustomerModal from '../components/CustomerModal';
+import AuthContext from '../context/AuthContext';
+import { useContext } from 'react';
 
 const CustomersPage = () => {
+    const { user } = useContext(AuthContext);
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -120,13 +123,15 @@ const CustomersPage = () => {
                 </div>
 
                 {/* Add Button */}
-                <button
-                    onClick={handleAdd}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition duration-200"
-                >
-                    <FiPlus className="w-5 h-5" />
-                    <span>Add Customer</span>
-                </button>
+                {user && (user.role === 'admin' || user.role === 'manager') && (
+                    <button
+                        onClick={handleAdd}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition duration-200"
+                    >
+                        <FiPlus className="w-5 h-5" />
+                        <span>Add Customer</span>
+                    </button>
+                )}
             </div>
 
             {/* Error Message */}
@@ -182,18 +187,22 @@ const CustomersPage = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button
-                                            onClick={() => handleEdit(customer)}
-                                            className="text-blue-600 hover:text-blue-800 mr-3"
-                                        >
-                                            <FiEdit className="w-5 h-5 inline" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(customer._id)}
-                                            className="text-red-600 hover:text-red-800"
-                                        >
-                                            <FiTrash2 className="w-5 h-5 inline" />
-                                        </button>
+                                        {user && (user.role === 'admin' || user.role === 'manager') && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleEdit(customer)}
+                                                    className="text-blue-600 hover:text-blue-800 mr-3"
+                                                >
+                                                    <FiEdit className="w-5 h-5 inline" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(customer._id)}
+                                                    className="text-red-600 hover:text-red-800"
+                                                >
+                                                    <FiTrash2 className="w-5 h-5 inline" />
+                                                </button>
+                                            </>
+                                        )}
                                     </td>
                                 </tr>
                             ))

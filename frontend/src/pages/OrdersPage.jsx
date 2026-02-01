@@ -3,8 +3,11 @@ import { FiPlus, FiEye, FiDownload } from 'react-icons/fi';
 import { fetchOrders, updateOrderStatus } from '../utils/api';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import OrderModal from '../components/OrderModal';
+import AuthContext from '../context/AuthContext';
+import { useContext } from 'react';
 
 const OrdersPage = () => {
+    const { user } = useContext(AuthContext);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -145,13 +148,15 @@ const OrdersPage = () => {
                 </div>
 
                 {/* Add Button */}
-                <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition duration-200"
-                >
-                    <FiPlus className="w-5 h-5" />
-                    <span>Create Order</span>
-                </button>
+                {user && (user.role === 'admin' || user.role === 'manager') && (
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition duration-200"
+                    >
+                        <FiPlus className="w-5 h-5" />
+                        <span>Create Order</span>
+                    </button>
+                )}
             </div>
 
             {/* Error Message */}
@@ -207,7 +212,8 @@ const OrdersPage = () => {
                                         <select
                                             value={order.status}
                                             onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                            className={`px-3 py-1 text-xs font-medium rounded-full border-0 ${getStatusColor(order.status)}`}
+                                            disabled={!user || (user.role !== 'admin' && user.role !== 'manager')}
+                                            className={`px-3 py-1 text-xs font-medium rounded-full border-0 ${getStatusColor(order.status)} disabled:opacity-70 disabled:cursor-not-allowed`}
                                         >
                                             <option value="pending">Pending</option>
                                             <option value="completed">Completed</option>
