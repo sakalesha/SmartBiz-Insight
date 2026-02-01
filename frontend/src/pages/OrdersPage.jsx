@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEye, FiDownload } from 'react-icons/fi';
 import { fetchOrders, updateOrderStatus } from '../utils/api';
+import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import OrderModal from '../components/OrderModal';
 
 const OrdersPage = () => {
@@ -57,6 +58,50 @@ const OrdersPage = () => {
         }
     };
 
+    const handleExportCSV = () => {
+        const headers = [
+            { label: 'Order #', key: 'orderNumber' },
+            { label: 'Customer', key: 'customerName' },
+            { label: 'Items', key: 'itemCount' },
+            { label: 'Total', key: 'totalAmount' },
+            { label: 'Status', key: 'status' },
+            { label: 'Date', key: 'date' }
+        ];
+
+        const dataToExport = orders.map(order => ({
+            orderNumber: order.orderNumber,
+            customerName: order.customer?.name || 'N/A',
+            itemCount: order.items?.length || 0,
+            totalAmount: order.totalAmount?.toFixed(2),
+            status: order.status,
+            date: new Date(order.createdAt).toLocaleDateString()
+        }));
+
+        exportToCSV(dataToExport, headers, 'orders_export.csv');
+    };
+
+    const handleExportPDF = () => {
+        const headers = [
+            { header: 'Order #', dataKey: 'orderNumber' },
+            { header: 'Customer', dataKey: 'customerName' },
+            { header: 'Items', dataKey: 'itemCount' },
+            { header: 'Total', dataKey: 'totalAmount' },
+            { header: 'Status', dataKey: 'status' },
+            { header: 'Date', dataKey: 'date' }
+        ];
+
+        const dataToExport = orders.map(order => ({
+            orderNumber: order.orderNumber,
+            customerName: order.customer?.name || 'N/A',
+            itemCount: order.items?.length || 0,
+            totalAmount: `$${order.totalAmount?.toFixed(2)}`,
+            status: order.status,
+            date: new Date(order.createdAt).toLocaleDateString()
+        }));
+
+        exportToPDF(dataToExport, headers, 'orders_export.pdf', 'Order List');
+    };
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -80,6 +125,24 @@ const OrdersPage = () => {
                 </select>
 
                 <div className="flex-1"></div>
+
+                {/* Export Buttons */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+                    >
+                        <FiDownload className="w-5 h-5" />
+                        <span>CSV</span>
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+                    >
+                        <FiDownload className="w-5 h-5" />
+                        <span>PDF</span>
+                    </button>
+                </div>
 
                 {/* Add Button */}
                 <button

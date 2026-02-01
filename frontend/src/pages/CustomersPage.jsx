@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiSearch, FiDownload } from 'react-icons/fi';
 import { fetchCustomers, deleteCustomer } from '../utils/api';
+import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import CustomerModal from '../components/CustomerModal';
 
 const CustomersPage = () => {
@@ -58,6 +59,26 @@ const CustomersPage = () => {
         if (refresh) loadCustomers();
     };
 
+    const handleExportCSV = () => {
+        const headers = [
+            { label: 'Name', key: 'name' },
+            { label: 'Email', key: 'email' },
+            { label: 'Phone', key: 'phone' },
+            { label: 'Status', key: 'status' }
+        ];
+        exportToCSV(customers, headers, 'customers_export.csv');
+    };
+
+    const handleExportPDF = () => {
+        const headers = [
+            { header: 'Name', dataKey: 'name' },
+            { header: 'Email', dataKey: 'email' },
+            { header: 'Phone', dataKey: 'phone' },
+            { header: 'Status', dataKey: 'status' }
+        ];
+        exportToPDF(customers, headers, 'customers_export.pdf', 'Customer List');
+    };
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -78,6 +99,24 @@ const CustomersPage = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                </div>
+
+                {/* Export Buttons */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+                    >
+                        <FiDownload className="w-5 h-5" />
+                        <span>CSV</span>
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+                    >
+                        <FiDownload className="w-5 h-5" />
+                        <span>PDF</span>
+                    </button>
                 </div>
 
                 {/* Add Button */}
@@ -136,8 +175,8 @@ const CustomersPage = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${customer.status === 'active'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-gray-100 text-gray-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-gray-100 text-gray-800'
                                             }`}>
                                             {customer.status}
                                         </span>
