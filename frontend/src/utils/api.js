@@ -11,12 +11,20 @@ const getAuthHeaders = () => {
     };
 };
 
+// Helper to serialize filters
+const serializeFilters = (filters) => {
+    return Object.entries(filters || {})
+        .filter(([_, value]) => value !== undefined && value !== '')
+        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        .join('&');
+};
+
 // Customer APIs
-export const fetchCustomers = async (page = 1, search = '') => {
-    const response = await fetch(
-        `${API_URL}/customers?page=${page}&limit=10${search ? `&search=${search}` : ''}`,
-        { headers: getAuthHeaders() }
-    );
+export const fetchCustomers = async (page = 1, filters = {}) => {
+    const queryParams = serializeFilters(filters);
+    const url = `${API_URL}/customers?page=${page}&limit=10${queryParams ? `&${queryParams}` : ''}`;
+
+    const response = await fetch(url, { headers: getAuthHeaders() });
 
     if (!response.ok) {
         throw new Error('Failed to fetch customers');
@@ -69,11 +77,11 @@ export const deleteCustomer = async (id) => {
 };
 
 // Order APIs
-export const fetchOrders = async (page = 1, status = '') => {
-    const response = await fetch(
-        `${API_URL}/orders?page=${page}&limit=10${status ? `&status=${status}` : ''}`,
-        { headers: getAuthHeaders() }
-    );
+export const fetchOrders = async (page = 1, filters = {}) => {
+    const queryParams = serializeFilters(filters);
+    const url = `${API_URL}/orders?page=${page}&limit=10${queryParams ? `&${queryParams}` : ''}`;
+
+    const response = await fetch(url, { headers: getAuthHeaders() });
 
     if (!response.ok) {
         throw new Error('Failed to fetch orders');
@@ -113,13 +121,11 @@ export const updateOrderStatus = async (id, status) => {
 };
 
 // Product APIs
-export const fetchProducts = async (page = 1, search = '', category = '', status = '') => {
-    let query = `page=${page}&limit=10`;
-    if (search) query += `&search=${search}`;
-    if (category) query += `&category=${category}`;
-    if (status) query += `&status=${status}`;
+export const fetchProducts = async (page = 1, filters = {}) => {
+    const queryParams = serializeFilters(filters);
+    const url = `${API_URL}/products?page=${page}&limit=10${queryParams ? `&${queryParams}` : ''}`;
 
-    const response = await fetch(`${API_URL}/products?${query}`, {
+    const response = await fetch(url, {
         headers: getAuthHeaders()
     });
 

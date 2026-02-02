@@ -24,6 +24,28 @@ const getProducts = async (req, res) => {
             filter.status = req.query.status;
         }
 
+        // Price range filter
+        if (req.query.minPrice || req.query.maxPrice) {
+            filter.price = {};
+            if (req.query.minPrice) {
+                filter.price.$gte = parseFloat(req.query.minPrice);
+            }
+            if (req.query.maxPrice) {
+                filter.price.$lte = parseFloat(req.query.maxPrice);
+            }
+        }
+
+        // Stock status filter
+        if (req.query.stockStatus) {
+            if (req.query.stockStatus === 'in_stock') {
+                filter.stockQuantity = { $gt: 0 };
+            } else if (req.query.stockStatus === 'out_of_stock') {
+                filter.stockQuantity = 0;
+            } else if (req.query.stockStatus === 'low_stock') {
+                filter.stockQuantity = { $gt: 0, $lte: 10 };
+            }
+        }
+
         const products = await Product.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)

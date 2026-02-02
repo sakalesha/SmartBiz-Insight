@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FiPlus, FiEye, FiDownload } from 'react-icons/fi';
 import { fetchOrders, updateOrderStatus } from '../utils/api';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import OrderModal from '../components/OrderModal';
 import AuthContext from '../context/AuthContext';
-import { useContext } from 'react';
+import FilterBar from '../components/FilterBar';
 
 const OrdersPage = () => {
     const { user } = useContext(AuthContext);
@@ -12,15 +12,32 @@ const OrdersPage = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [statusFilter, setStatusFilter] = useState('');
+    const [filters, setFilters] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState(null);
+
+    const filterConfig = [
+        {
+            key: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+                { value: 'pending', label: 'Pending' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'cancelled', label: 'Cancelled' }
+            ]
+        },
+        { key: 'startDate', label: 'Start Date', type: 'date' },
+        { key: 'endDate', label: 'End Date', type: 'date' },
+        { key: 'minAmount', label: 'Min Amount', type: 'number', placeholder: '0.00' },
+        { key: 'maxAmount', label: 'Max Amount', type: 'number', placeholder: '0.00' }
+    ];
 
     const loadOrders = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await fetchOrders(page, statusFilter);
+            const data = await fetchOrders(page, filters);
             setOrders(data.orders);
             setTotalPages(data.pagination.pages);
         } catch (err) {
@@ -32,7 +49,12 @@ const OrdersPage = () => {
 
     useEffect(() => {
         loadOrders();
-    }, [page, statusFilter]);
+    }, [page, filters]);
+
+    const handleFilter = (newFilters) => {
+        setFilters(newFilters);
+        setPage(1);
+    };
 
     const handleStatusChange = async (orderId, newStatus) => {
         try {
@@ -113,22 +135,15 @@ const OrdersPage = () => {
                 <p className="text-gray-600">Manage and track customer orders</p>
             </div>
 
+            {/* Filters */}
+            <FilterBar
+                config={filterConfig}
+                onFilter={handleFilter}
+                placeholder="Search by Order #..."
+            />
+
             {/* Actions Bar */}
-            <div className="mb-6 flex gap-4 items-center">
-                {/* Status Filter */}
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-
-                <div className="flex-1"></div>
-
+            <div className="mb-6 flex gap-4 items-center justify-end">
                 {/* Export Buttons */}
                 <div className="flex gap-2">
                     <button

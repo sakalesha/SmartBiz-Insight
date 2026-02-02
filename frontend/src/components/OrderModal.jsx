@@ -20,8 +20,8 @@ const OrderModal = ({ onClose }) => {
     const loadData = async () => {
         try {
             const [customersData, productsData] = await Promise.all([
-                fetchCustomers(1, ''),
-                fetchProducts(1, '', '', 'active') // Fetch active products
+                fetchCustomers(1, {}),
+                fetchProducts(1, { status: 'active' }) // Fetch active products
             ]);
             setCustomers(customersData.customers || []);
             setProducts(productsData.products || []);

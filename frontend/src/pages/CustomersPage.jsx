@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiDownload } from 'react-icons/fi';
 import { fetchCustomers, deleteCustomer } from '../utils/api';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import CustomerModal from '../components/CustomerModal';
 import AuthContext from '../context/AuthContext';
-import { useContext } from 'react';
+import FilterBar from '../components/FilterBar';
 
 const CustomersPage = () => {
     const { user } = useContext(AuthContext);
@@ -12,16 +12,30 @@ const CustomersPage = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [filters, setFilters] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [error, setError] = useState(null);
+
+    const filterConfig = [
+        {
+            key: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }
+            ]
+        },
+        { key: 'startDate', label: 'Start Date', type: 'date' },
+        { key: 'endDate', label: 'End Date', type: 'date' }
+    ];
 
     const loadCustomers = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await fetchCustomers(page, searchQuery);
+            const data = await fetchCustomers(page, filters);
             setCustomers(data.customers);
             setTotalPages(data.pagination.pages);
         } catch (err) {
@@ -33,7 +47,12 @@ const CustomersPage = () => {
 
     useEffect(() => {
         loadCustomers();
-    }, [page, searchQuery]);
+    }, [page, filters]);
+
+    const handleFilter = (newFilters) => {
+        setFilters(newFilters);
+        setPage(1); // Reset to first page
+    };
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this customer?')) return;
@@ -90,19 +109,15 @@ const CustomersPage = () => {
                 <p className="text-gray-600">Manage your customer database</p>
             </div>
 
+            {/* Filters */}
+            <FilterBar
+                config={filterConfig}
+                onFilter={handleFilter}
+                placeholder="Search customers..."
+            />
+
             {/* Actions Bar */}
-            <div className="mb-6 flex gap-4 items-center">
-                {/* Search */}
-                <div className="flex-1 relative">
-                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Search customers by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
+            <div className="mb-6 flex gap-4 items-center justify-end">
 
                 {/* Export Buttons */}
                 <div className="flex gap-2">

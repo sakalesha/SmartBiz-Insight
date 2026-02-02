@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
 import { fetchProducts, deleteProduct } from '../utils/api';
 import ProductModal from '../components/ProductModal';
 import AuthContext from '../context/AuthContext';
-import { useContext } from 'react';
+import FilterBar from '../components/FilterBar';
 
 const ProductsPage = () => {
     const { user } = useContext(AuthContext);
@@ -11,16 +11,40 @@ const ProductsPage = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [search, setSearch] = useState('');
+    const [filters, setFilters] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [error, setError] = useState(null);
+
+    const filterConfig = [
+        {
+            key: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }
+            ]
+        },
+        {
+            key: 'stockStatus',
+            label: 'Stock Status',
+            type: 'select',
+            options: [
+                { value: 'in_stock', label: 'In Stock' },
+                { value: 'low_stock', label: 'Low Stock' },
+                { value: 'out_of_stock', label: 'Out of Stock' }
+            ]
+        },
+        { key: 'minPrice', label: 'Min Price', type: 'number', placeholder: '0.00' },
+        { key: 'maxPrice', label: 'Max Price', type: 'number', placeholder: '0.00' }
+    ];
 
     const loadProducts = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await fetchProducts(page, search);
+            const data = await fetchProducts(page, filters);
             setProducts(data.products);
             setTotalPages(data.pagination.pages);
         } catch (err) {
@@ -31,12 +55,13 @@ const ProductsPage = () => {
     };
 
     useEffect(() => {
-        // Debounce search
-        const timer = setTimeout(() => {
-            loadProducts();
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [page, search]);
+        loadProducts();
+    }, [page, filters]);
+
+    const handleFilter = (newFilters) => {
+        setFilters(newFilters);
+        setPage(1);
+    };
 
     const handleEdit = (product) => {
         setSelectedProduct(product);
@@ -67,22 +92,15 @@ const ProductsPage = () => {
                 <p className="text-gray-600">Manage your product catalog and inventory</p>
             </div>
 
+            {/* Filters */}
+            <FilterBar
+                config={filterConfig}
+                onFilter={handleFilter}
+                placeholder="Search products..."
+            />
+
             {/* Actions Bar */}
-            <div className="mb-6 flex gap-4 items-center">
-                {/* Search */}
-                <div className="relative flex-1 max-w-md">
-                    <FiSearch className="absolute left-3 top-3 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
-
-                <div className="flex-1"></div>
-
+            <div className="mb-6 flex gap-4 items-center justify-end">
                 {/* Add Button */}
                 {user && (user.role === 'admin' || user.role === 'manager') && (
                     <button

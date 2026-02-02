@@ -8,13 +8,49 @@ const getOrders = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const orders = await Order.find()
+        const filter = {};
+
+        // Search by Order Number
+        if (req.query.search) {
+            filter.orderNumber = { $regex: req.query.search, $options: 'i' };
+        }
+
+        // Status filter
+        if (req.query.status) {
+            filter.status = req.query.status;
+        }
+
+        // Date range filter
+        if (req.query.startDate || req.query.endDate) {
+            filter.createdAt = {};
+            if (req.query.startDate) {
+                filter.createdAt.$gte = new Date(req.query.startDate);
+            }
+            if (req.query.endDate) {
+                const endDate = new Date(req.query.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = endDate;
+            }
+        }
+
+        // Amount range filter
+        if (req.query.minAmount || req.query.maxAmount) {
+            filter.totalAmount = {};
+            if (req.query.minAmount) {
+                filter.totalAmount.$gte = parseFloat(req.query.minAmount);
+            }
+            if (req.query.maxAmount) {
+                filter.totalAmount.$lte = parseFloat(req.query.maxAmount);
+            }
+        }
+
+        const orders = await Order.find(filter)
             .populate('customer', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
-        const total = await Order.countDocuments();
+        const total = await Order.countDocuments(filter);
 
         res.json({
             orders,
