@@ -1,34 +1,40 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiPlus, FiTrash2 } from 'react-icons/fi';
-import { fetchCustomers, createOrder } from '../utils/api';
+import { fetchCustomers, createOrder, fetchProducts } from '../utils/api';
 
 const OrderModal = ({ onClose }) => {
     const [customers, setCustomers] = useState([]);
+    const [products, setProducts] = useState([]);
     const [formData, setFormData] = useState({
         customer: '',
-        items: [{ name: '', quantity: 1, price: 0 }],
+        items: [{ product: '', name: '', quantity: 1, price: 0 }],
         status: 'pending'
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        loadCustomers();
+        loadData();
     }, []);
 
-    const loadCustomers = async () => {
+    const loadData = async () => {
         try {
-            const data = await fetchCustomers(1, '');
-            setCustomers(data.customers || []);
+            const [customersData, productsData] = await Promise.all([
+                fetchCustomers(1, ''),
+                fetchProducts(1, '', '', 'active') // Fetch active products
+            ]);
+            setCustomers(customersData.customers || []);
+            setProducts(productsData.products || []);
         } catch (err) {
-            console.error('Failed to load customers:', err);
+            console.error('Failed to load data:', err);
+            setError('Failed to load customers or products');
         }
     };
 
     const handleAddItem = () => {
         setFormData(prev => ({
             ...prev,
-            items: [...prev.items, { name: '', quantity: 1, price: 0 }]
+            items: [...prev.items, { product: '', name: '', quantity: 1, price: 0 }]
         }));
     };
 
@@ -41,12 +47,29 @@ const OrderModal = ({ onClose }) => {
     };
 
     const handleItemChange = (index, field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            items: prev.items.map((item, i) =>
-                i === index ? { ...item, [field]: value } : item
-            )
-        }));
+        if (field === 'product') {
+            const product = products.find(p => p._id === value);
+            if (product) {
+                setFormData(prev => ({
+                    ...prev,
+                    items: prev.items.map((item, i) =>
+                        i === index ? {
+                            ...item,
+                            product: value,
+                            name: product.name,
+                            price: product.price
+                        } : item
+                    )
+                }));
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                items: prev.items.map((item, i) =>
+                    i === index ? { ...item, [field]: value } : item
+                )
+            }));
+        }
     };
 
     const calculateTotal = () => {
@@ -59,6 +82,14 @@ const OrderModal = ({ onClose }) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+
+        // Validate items
+        const invalidItems = formData.items.some(item => !item.product || item.quantity < 1);
+        if (invalidItems) {
+            setError('Please select a product and valid quantity for all items');
+            setLoading(false);
+            return;
+        }
 
         try {
             await createOrder(formData);
@@ -132,14 +163,19 @@ const OrderModal = ({ onClose }) => {
                             {formData.items.map((item, index) => (
                                 <div key={index} className="flex gap-3 items-start">
                                     <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            placeholder="Item name"
-                                            value={item.name}
-                                            onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                                        <select
+                                            value={item.product}
+                                            onChange={(e) => handleItemChange(index, 'product', e.target.value)}
                                             required
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
+                                        >
+                                            <option value="">Select Product...</option>
+                                            {products.map(product => (
+                                                <option key={product._id} value={product._id}>
+                                                    {product.name} - ${product.price} ({product.stockQuantity} in stock)
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="w-24">
                                         <input
@@ -152,17 +188,8 @@ const OrderModal = ({ onClose }) => {
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                     </div>
-                                    <div className="w-32">
-                                        <input
-                                            type="number"
-                                            placeholder="Price"
-                                            min="0"
-                                            step="0.01"
-                                            value={item.price}
-                                            onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                                            required
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
+                                    <div className="w-32 flex items-center px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-600">
+                                        ${parseFloat(item.price).toFixed(2)}
                                     </div>
                                     {formData.items.length > 1 && (
                                         <button

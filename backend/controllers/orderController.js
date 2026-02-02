@@ -58,6 +58,21 @@ const createOrder = async (req, res) => {
             return sum + (item.price * item.quantity);
         }, 0);
 
+        // Check stock and update inventory
+        for (const item of items) {
+            if (item.product) {
+                const product = await require('../models/Product').findById(item.product);
+                if (!product) {
+                    return res.status(404).json({ message: `Product not found: ${item.name}` });
+                }
+                if (product.stockQuantity < item.quantity) {
+                    return res.status(400).json({ message: `Insufficient stock for: ${product.name}. Available: ${product.stockQuantity}` });
+                }
+                product.stockQuantity -= item.quantity;
+                await product.save();
+            }
+        }
+
         const order = new Order({
             customer,
             items,
@@ -96,6 +111,19 @@ const updateOrderStatus = async (req, res) => {
         }
 
         const oldStatus = order.status;
+        if (oldStatus !== 'cancelled' && status === 'cancelled') {
+            // Restore stock
+            for (const item of order.items) {
+                if (item.product) {
+                    const product = await require('../models/Product').findById(item.product);
+                    if (product) {
+                        product.stockQuantity += item.quantity;
+                        await product.save();
+                    }
+                }
+            }
+        }
+
         order.status = status;
         await order.save();
 

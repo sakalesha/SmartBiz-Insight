@@ -111,3 +111,64 @@ export const updateOrderStatus = async (id, status) => {
 
     return response.json();
 };
+
+// Product APIs
+export const fetchProducts = async (page = 1, search = '', category = '', status = '') => {
+    let query = `page=${page}&limit=10`;
+    if (search) query += `&search=${search}`;
+    if (category) query += `&category=${category}`;
+    if (status) query += `&status=${status}`;
+
+    const response = await fetch(`${API_URL}/products?${query}`, {
+        headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch products');
+    }
+
+    return response.json();
+};
+
+export const createProduct = async (data) => {
+    const response = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create product');
+    }
+
+    return response.json();
+};
+
+export const updateProduct = async (id, data) => {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update product');
+    }
+
+    return response.json();
+};
+
+export const deleteProduct = async (id) => {
+    const response = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to delete product');
+    }
+
+    return response.json();
+};

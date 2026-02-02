@@ -71,6 +71,7 @@ app.use('/api/users', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/analytics', analyticsRoutes);
 
 if (require.main === module) {

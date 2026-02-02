@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Transaction = require('../models/Transaction');
+const Product = require('../models/Product');
 
 dotenv.config();
 
@@ -45,18 +46,23 @@ const generateCustomers = (count) => {
     return customers;
 };
 
-const generateOrders = (customers, count) => {
-    const orders = [];
-    const products = [
-        { name: 'Premium Widget', price: 99.99 },
-        { name: 'Super Gadget', price: 149.99 },
-        { name: 'Ultra Tool', price: 79.99 },
-        { name: 'Mega Device', price: 199.99 },
-        { name: 'Pro Package', price: 299.99 },
-        { name: 'Basic Kit', price: 49.99 },
-        { name: 'Deluxe Set', price: 179.99 },
-        { name: 'Standard Bundle', price: 129.99 }
+const generateProducts = () => {
+    return [
+        { name: 'Premium Widget', sku: 'WGT-001', category: 'Widgets', price: 99.99, stockQuantity: 100, description: 'High quality widget', status: 'active' },
+        { name: 'Super Gadget', sku: 'GDG-001', category: 'Gadgets', price: 149.99, stockQuantity: 50, description: 'Cutting edge gadget', status: 'active' },
+        { name: 'Ultra Tool', sku: 'TOL-001', category: 'Tools', price: 79.99, stockQuantity: 75, description: 'Durable tool', status: 'active' },
+        { name: 'Mega Device', sku: 'DEV-001', category: 'Electronics', price: 199.99, stockQuantity: 30, description: 'Powerful device', status: 'active' },
+        { name: 'Pro Package', sku: 'PKG-001', category: 'Bundles', price: 299.99, stockQuantity: 20, description: 'All-in-one package', status: 'active' },
+        { name: 'Basic Kit', sku: 'KIT-001', category: 'Kits', price: 49.99, stockQuantity: 150, description: 'Starter kit', status: 'active' },
+        { name: 'Deluxe Set', sku: 'SET-001', category: 'Sets', price: 179.99, stockQuantity: 40, description: 'Luxury set', status: 'active' },
+        { name: 'Standard Bundle', sku: 'BND-001', category: 'Bundles', price: 129.99, stockQuantity: 60, description: 'Standard bundle', status: 'active' },
+        { name: 'Smart Watch', sku: 'WTC-001', category: 'Electronics', price: 249.99, stockQuantity: 45, description: 'Wearable tech', status: 'active' },
+        { name: 'Wireless Earbuds', sku: 'AUD-001', category: 'Audio', price: 89.99, stockQuantity: 80, description: 'Crystal clear sound', status: 'active' }
     ];
+};
+
+const generateOrders = (customers, products, count) => {
+    const orders = [];
 
     for (let i = 0; i < count; i++) {
         const customer = customers[Math.floor(Math.random() * customers.length)];
@@ -71,6 +77,7 @@ const generateOrders = (customers, count) => {
             totalAmount += itemTotal;
 
             items.push({
+                product: product._id,
                 name: product.name,
                 quantity: quantity,
                 price: product.price
@@ -129,6 +136,7 @@ const seedDatabase = async () => {
         await Customer.deleteMany({});
         await Order.deleteMany({});
         await Transaction.deleteMany({});
+        await Product.deleteMany({});
         // Also clear Users to reset roles (CAUTION: Resets all users)
         await User.deleteMany({});
         console.log('✓ Cleared existing data');
@@ -148,9 +156,15 @@ const seedDatabase = async () => {
         const customers = await Customer.insertMany(customersData);
         console.log(`✓ Created ${customers.length} customers`);
 
+        // Generate and insert products
+        console.log('\nGenerating products...');
+        const productsData = generateProducts();
+        const products = await Product.insertMany(productsData);
+        console.log(`✓ Created ${products.length} products`);
+
         // Generate and insert orders
         console.log('\nGenerating 100 orders...');
-        const ordersData = generateOrders(customers, 100);
+        const ordersData = generateOrders(customers, products, 100);
         const orders = await Order.insertMany(ordersData);
         console.log(`✓ Created ${orders.length} orders`);
 
@@ -170,6 +184,7 @@ const seedDatabase = async () => {
 📊 SEED SUMMARY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 👥 Customers:     ${customers.length}
+📦 Products:      ${products.length}
 📦 Orders:        ${orders.length}
 💰 Transactions:  ${transactionsData.length}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

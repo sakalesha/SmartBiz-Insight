@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FiHome, FiUsers, FiShoppingCart, FiLogOut, FiBarChart2 } from 'react-icons/fi';
+import { FiHome, FiUsers, FiShoppingCart, FiLogOut, FiBarChart2, FiPackage } from 'react-icons/fi';
 import AuthContext from '../context/AuthContext';
 
 const DashboardLayout = () => {
@@ -16,6 +16,7 @@ const DashboardLayout = () => {
     const menuItems = [
         { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
+        { path: '/products', icon: FiPackage, label: 'Products' },
         { path: '/orders', icon: FiShoppingCart, label: 'Orders' },
         { path: '/analytics', icon: FiBarChart2, label: 'Analytics' }
     ];
